@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Face Quiz</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #0A0A0A;
+      color: #FFFFFF;
+      font-family: 'Courier New', Courier, monospace;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background-color: #0A0A0A;
+    }
+    #game-container {
+      text-align: center;
+      padding-top: 20px;
+    }
+    #input-container {
+      margin-top: 20px;
+    }
+    #user-input {
+      width: 300px;
+      padding: 10px;
+      font-size: 16px;
+    }
+    #start-button {
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    #message {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="input-container" style="display: none;">
+      <input type="text" id="user-input" placeholder="Type the name and press Enter">
+    </div>
+    <button id="start-button">Start Game</button>
+    <div id="message"></div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
