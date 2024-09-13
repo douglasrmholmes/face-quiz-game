@@ -10,6 +10,11 @@ let timeLeft = SHOW_TIME;
 let timer;
 let showNames = true;
 
+// Function to check if a string contains only ASCII letters and spaces
+function isRomanAlphabet(str) {
+  return /^[A-Za-z\s]+$/.test(str);
+}
+
 class Face {
   constructor(imageSrc, name) {
     this.imageSrc = imageSrc;
@@ -63,13 +68,35 @@ function displayInstructions() {
 }
 
 async function loadFaces() {
+  faces.length = 0; // Clear any existing faces
   for (let i = 0; i < FACE_COUNT; i++) {
-    const response = await fetch('https://randomuser.me/api/');
-    const data = await response.json();
-    const user = data.results[0];
-    const imageSrc = user.picture.large;
-    const name = `${user.name.first} ${user.name.last}`;
-    faces.push(new Face(imageSrc, name));
+    let validName = false;
+    let attempts = 0;
+    while (!validName && attempts < 10) {
+      attempts++;
+      try {
+        // Fetch user from specified nationalities
+        const response = await fetch('https://randomuser.me/api/?nat=us,gb,ca,au,nz');
+        const data = await response.json();
+        const user = data.results[0];
+        const firstName = user.name.first;
+        const lastName = user.name.last;
+        const fullName = `${firstName} ${lastName}`;
+        // Check if the name contains only Roman alphabet characters
+        if (isRomanAlphabet(fullName)) {
+          const imageSrc = user.picture.large;
+          const name = fullName;
+          faces.push(new Face(imageSrc, name));
+          validName = true;
+        }
+      } catch (error) {
+        console.error('Failed to fetch user data:', error);
+      }
+    }
+    if (!validName) {
+      messageDiv.textContent = 'Failed to load faces. Please try again later.';
+      return;
+    }
   }
 }
 
@@ -138,7 +165,9 @@ function showResult(correct) {
 
 startButton.addEventListener('click', async () => {
   await loadFaces();
-  startMemorization();
+  if (faces.length === FACE_COUNT) {
+    startMemorization();
+  }
 });
 
 displayInstructions();
