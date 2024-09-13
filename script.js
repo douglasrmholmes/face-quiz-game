@@ -1,58 +1,54 @@
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
 const startButton = document.getElementById('start-button');
-const inputContainer = document.getElementById('input-container');
-const userInput = document.getElementById('user-input');
+const facesContainer = document.getElementById('faces-container');
 const messageDiv = document.getElementById('message');
-
-const WIDTH = canvas.width;
-const HEIGHT = canvas.height;
+const timerDiv = document.getElementById('timer');
 
 const FACE_COUNT = 5;
 const SHOW_TIME = 30; // seconds
-const positions = [];
 const faces = [];
-const inputs = {};
-let currentFaceIndex = 0;
-let showNames = true;
-let timer;
 let timeLeft = SHOW_TIME;
-
-// Name generation
-const SYLLABLES = ["ka", "la", "mi", "no", "se", "ri", "ta", "zu", "xi", "vo"];
-
-function generateName() {
-  return (
-    SYLLABLES[Math.floor(Math.random() * SYLLABLES.length)].charAt(0).toUpperCase() +
-    SYLLABLES[Math.floor(Math.random() * SYLLABLES.length)]
-  );
-}
+let timer;
+let showNames = true;
 
 class Face {
-  constructor(imageSrc, name, x, y) {
-    this.image = new Image();
-    this.image.src = imageSrc;
+  constructor(imageSrc, name) {
+    this.imageSrc = imageSrc;
     this.name = name;
-    this.x = x;
-    this.y = y;
+    this.userInput = '';
+    this.element = null;
+    this.inputElement = null;
   }
 
-  draw(showName) {
-    ctx.drawImage(this.image, this.x - 50, this.y - 50, 100, 100);
-    if (showName) {
-      ctx.font = '24px Courier';
-      ctx.fillStyle = '#FFFFFF';
-      ctx.textAlign = 'center';
-      ctx.fillText(this.name, this.x, this.y + 70);
+  createElement() {
+    // Create container
+    const faceItem = document.createElement('div');
+    faceItem.className = 'face-item';
+
+    // Create image
+    const img = document.createElement('img');
+    img.src = this.imageSrc;
+    faceItem.appendChild(img);
+
+    // Create name or input field
+    if (showNames) {
+      const nameDiv = document.createElement('div');
+      nameDiv.textContent = this.name;
+      nameDiv.style.marginTop = '10px';
+      faceItem.appendChild(nameDiv);
+    } else {
+      this.inputElement = document.createElement('input');
+      this.inputElement.type = 'text';
+      this.inputElement.className = 'face-input';
+      this.inputElement.placeholder = 'Enter name';
+      faceItem.appendChild(this.inputElement);
     }
+
+    this.element = faceItem;
+    facesContainer.appendChild(faceItem);
   }
 }
 
 function displayInstructions() {
-  ctx.clearRect(0, 0, WIDTH, HEIGHT);
-  ctx.font = '24px Courier';
-  ctx.fillStyle = '#FFFFFF';
-  ctx.textAlign = 'center';
   const instructions = [
     "Welcome to Face Quiz!",
     "",
@@ -63,94 +59,69 @@ function displayInstructions() {
     "",
     "Press 'Start Game' to begin..."
   ];
-  instructions.forEach((line, index) => {
-    ctx.fillText(line, WIDTH / 2, 100 + index * 30);
-  });
+  messageDiv.innerHTML = instructions.join('<br>');
 }
 
 async function loadFaces() {
   for (let i = 0; i < FACE_COUNT; i++) {
     const response = await fetch('https://randomuser.me/api/');
     const data = await response.json();
-    const imageSrc = data.results[0].picture.large;
-    const name = generateName();
-    const x = 150 + i * 130;
-    const y = HEIGHT / 2;
-    positions.push({ x, y });
-    faces.push(new Face(imageSrc, name, x, y));
+    const user = data.results[0];
+    const imageSrc = user.picture.large;
+    const name = `${user.name.first} ${user.name.last}`;
+    faces.push(new Face(imageSrc, name));
   }
 }
 
-function drawFaces() {
-  ctx.clearRect(0, 0, WIDTH, HEIGHT);
-  ctx.fillStyle = '#0A0A0A';
-  ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
-  // Draw "openai" on the screen
-  ctx.font = '32px Courier';
-  ctx.fillStyle = '#FFFFFF';
-  ctx.textAlign = 'left';
-  ctx.fillText('openai', 10, 40);
-
-  // Draw timer
-  ctx.font = '24px Courier';
-  ctx.textAlign = 'right';
-  ctx.fillText(`Time Left: ${timeLeft}`, WIDTH - 10, 40);
-
+function displayFaces() {
+  facesContainer.innerHTML = '';
   faces.forEach(face => {
-    face.draw(showNames);
+    face.createElement();
   });
 }
 
 function startMemorization() {
   showNames = true;
   timeLeft = SHOW_TIME;
+  messageDiv.textContent = '';
+  startButton.style.display = 'none';
+  facesContainer.style.display = 'flex';
+  displayFaces();
+  timerDiv.textContent = `Time Left: ${timeLeft}`;
+
   timer = setInterval(() => {
     timeLeft--;
+    timerDiv.textContent = `Time Left: ${timeLeft}`;
     if (timeLeft <= 0) {
       clearInterval(timer);
       startRecall();
     }
-    drawFaces();
   }, 1000);
-  drawFaces();
 }
 
 function startRecall() {
   showNames = false;
-  currentFaceIndex = 0;
-  inputs.names = [];
-  inputContainer.style.display = 'block';
-  startButton.style.display = 'none';
+  facesContainer.innerHTML = '';
+  displayFaces();
+  timerDiv.textContent = '';
   messageDiv.textContent = '';
-  drawRecallScreen();
-}
 
-function drawRecallScreen() {
-  ctx.clearRect(0, 0, WIDTH, HEIGHT);
-  ctx.fillStyle = '#0A0A0A';
-  ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
-  // Draw "openai" on the screen
-  ctx.font = '32px Courier';
-  ctx.fillStyle = '#FFFFFF';
-  ctx.textAlign = 'left';
-  ctx.fillText('openai', 10, 40);
-
-  faces.forEach((face, index) => {
-    face.draw(false);
-    if (index === currentFaceIndex) {
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(face.x - 52, face.y - 52, 104, 104);
-    }
-  });
+  // Add a submit button
+  const submitButton = document.createElement('button');
+  submitButton.id = 'submit-button';
+  submitButton.textContent = 'Submit Answers';
+  submitButton.style.marginTop = '20px';
+  submitButton.style.padding = '10px 20px';
+  submitButton.style.fontSize = '16px';
+  submitButton.addEventListener('click', checkAnswers);
+  messageDiv.appendChild(submitButton);
 }
 
 function checkAnswers() {
   let correct = 0;
   faces.forEach(face => {
-    if (inputs[face.name] && inputs[face.name].toLowerCase() === face.name.toLowerCase()) {
+    const userAnswer = face.inputElement.value.trim();
+    if (userAnswer.toLowerCase() === face.name.toLowerCase()) {
       correct++;
     }
   });
@@ -158,37 +129,16 @@ function checkAnswers() {
 }
 
 function showResult(correct) {
-  ctx.clearRect(0, 0, WIDTH, HEIGHT);
-  ctx.font = '32px Courier';
-  ctx.fillStyle = '#FFFFFF';
-  ctx.textAlign = 'center';
-  ctx.fillText(`You got ${correct} out of ${FACE_COUNT} correct!`, WIDTH / 2, HEIGHT / 2 - 50);
-  ctx.font = '24px Courier';
-  ctx.fillText('The game will restart shortly...', WIDTH / 2, HEIGHT / 2 + 10);
+  facesContainer.style.display = 'none';
+  messageDiv.innerHTML = `You got ${correct} out of ${FACE_COUNT} correct!<br>The game will restart shortly...`;
   setTimeout(() => {
     location.reload();
   }, 5000);
 }
 
 startButton.addEventListener('click', async () => {
-  startButton.style.display = 'none';
   await loadFaces();
   startMemorization();
-});
-
-userInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    const face = faces[currentFaceIndex];
-    inputs[face.name] = userInput.value.trim();
-    userInput.value = '';
-    currentFaceIndex++;
-    if (currentFaceIndex >= FACE_COUNT) {
-      inputContainer.style.display = 'none';
-      checkAnswers();
-    } else {
-      drawRecallScreen();
-    }
-  }
 });
 
 displayInstructions();
