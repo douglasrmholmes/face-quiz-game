@@ -10,38 +10,58 @@
       color: #FFFFFF;
       font-family: 'Courier New', Courier, monospace;
     }
-    canvas {
-      display: block;
-      margin: 0 auto;
-      background-color: #0A0A0A;
-    }
     #game-container {
       text-align: center;
       padding-top: 20px;
     }
-    #input-container {
+    #faces-container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
       margin-top: 20px;
     }
-    #user-input {
-      width: 300px;
-      padding: 10px;
-      font-size: 16px;
+    .face-item {
+      margin: 20px;
+      text-align: center;
     }
-    #start-button {
+    .face-item img {
+      width: 100px;
+      height: 100px;
+    }
+    .face-input {
+      margin-top: 10px;
+      width: 100px;
+      padding: 5px;
+      font-size: 14px;
+      text-align: center;
+    }
+    #start-button, #submit-button {
       padding: 10px 20px;
       font-size: 16px;
     }
     #message {
       margin-top: 20px;
     }
+    #timer {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 24px;
+    }
+    #openai {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 32px;
+    }
   </style>
 </head>
 <body>
   <div id="game-container">
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
-    <div id="input-container" style="display: none;">
-      <input type="text" id="user-input" placeholder="Type the name and press Enter">
-    </div>
+    <div id="timer"></div>
+    <div id="openai">openai</div>
+    <canvas id="gameCanvas" width="800" height="0"></canvas>
+    <div id="faces-container" style="display: none;"></div>
     <button id="start-button">Start Game</button>
     <div id="message"></div>
   </div>
